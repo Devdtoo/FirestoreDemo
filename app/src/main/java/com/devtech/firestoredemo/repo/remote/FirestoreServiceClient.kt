@@ -1,7 +1,5 @@
 package com.devtech.firestoredemo.repo.remote
 
-import android.util.Log
-import com.devtech.firestoredemo.repo.local.model.ProductResponse
 import com.devtech.firestoredemo.repo.local.model.Products
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.gson.Gson
@@ -46,32 +44,25 @@ class FirestoreServiceClient {
         }*/
 
 
-    fun getAllProducts() {
+    fun getAllProducts(onSuccess : (List<Products>?)-> Unit) {
         firebaseReference.get()
                 .addOnSuccessListener { products ->
                     if (products.exists()) {
-                        var list = products.data?.toList()
-
-//                        var gson = Gson()
-//                        var productResponse: ProductResponse = gson.fromJson<ProductResponse>(products.data.toString(),Products::class.java)
-
-//                        Timber.e(" ProductResponse: ${productResponse}")
+                        var gson = Gson()
                         products.data?.forEach {
-                            Timber.e("String Response: ${it.value}")
-
-
+                            var responseInJson = gson.toJson(it.value).toString()
+                            var productResponse = gson.fromJson<Products>(responseInJson, Products::class.java)
+                            productList.add(productResponse)
                         }
-
-
-//                    Timber.e("$productList")
-
-                        Log.d("FirestoreServiceClient", "DocumentSnapshot data: ${products.data.toString()}")
+                        onSuccess(productList)
+                    Timber.e("Product Lust Response: $productList")
                     } else {
-                        Log.d("FirestoreServiceClient", "No such document")
+                        Timber.e("No such document")
                     }
                 }
                 .addOnFailureListener { exception ->
-                    Log.d("FirestoreServiceClient", "get failed with ", exception)
+                    Timber.e("get failed with $exception")
+                    onSuccess(null)
                 }
     }
 }
